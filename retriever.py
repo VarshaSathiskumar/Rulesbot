@@ -25,23 +25,25 @@ def embed_and_store(chunks):
     """
     Embed a list of chunks and store them in the vector database.
 
-    TODO — Milestone 1 (complete after chunk_document):
+    This function is already implemented — read through it before moving on.
 
-    `chunks` is the list returned by chunk_document(). Each item is a dict:
-      - "text"     : the chunk text
-      - "game"     : the game name
-      - "chunk_id" : a unique identifier
+    _collection.add() takes three parallel lists built from the chunks
+    returned by chunk_document():
+      - documents : raw text strings — ChromaDB's embedding function converts
+                    these to vectors automatically using sentence-transformers
+      - metadatas : one dict per chunk, stored alongside the vector so that
+                    retrieve() can surface which game a result came from
+      - ids       : the unique chunk_id strings used to identify each entry
 
-    Use _collection.add() to store them. It takes:
-      - documents : list of strings  → the chunk texts
-      - metadatas : list of dicts    → store {"game": ...} here so retrieve()
-                                       can surface which game a result came from
-      - ids       : list of strings  → use chunk_id
-
-    After adding, print the total number of chunks stored so you can confirm
-    everything made it in before moving on.
+    You don't generate embeddings manually here — you hand over the text
+    and ChromaDB handles the vector math.
     """
-    pass
+    _collection.add(
+        documents=[c["text"] for c in chunks],
+        metadatas=[{"game": c["game"]} for c in chunks],
+        ids=[c["chunk_id"] for c in chunks],
+    )
+    print(f"Stored {_collection.count()} total chunks in the vector database.")
 
 
 def retrieve(query, n_results=N_RESULTS):

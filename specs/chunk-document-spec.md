@@ -1,7 +1,7 @@
 # Spec: `chunk_document()`
 
 **File:** `ingest.py`
-**Status:** Spec incomplete — fill in all blank fields before implementing
+**Status:** Pre-implemented — read through this spec and the code in `ingest.py` before moving to Milestone 2.
 
 ---
 
@@ -22,7 +22,7 @@ Split a single rule book document into smaller chunks suitable for embedding and
 
 **Output:** `list[dict]`
 
-Each dict in the returned list must contain exactly these keys:
+Each dict in the returned list contains exactly these keys:
 
 | Key | Type | Description |
 |-----|------|-------------|
@@ -36,73 +36,82 @@ Returns an empty list `[]` if the input text is empty or produces no valid chunk
 
 ## Design Decisions
 
-*Complete the fields below before writing any code. Use your AI tool in Plan or Ask mode to help you reason through what belongs here — but the decisions are yours.*
-
 ---
 
 ### Splitting approach
 
-*How will you split the document text into segments? Describe the method — not the code.*
-
 ```
-[your answer here]
+Character-based sliding window. The document text is stepped through in
+fixed-size windows of `chunk_size` characters, advancing by
+(chunk_size - overlap) on each step so adjacent chunks share a small
+region of text at their boundary.
 ```
 
 ---
 
 ### Chunk size
 
-*What is the target size of each chunk, and in what unit (characters, words, tokens, paragraphs)?*
-
 ```
-[your answer here]
+300 characters. Rule book text is semantically dense — a single rule is
+often 1–3 sentences, which fits comfortably in this range. Going smaller
+would fragment individual rules; going larger would merge unrelated rules
+into one chunk, making retrieval less precise.
 ```
 
 ---
 
 ### Overlap
 
-*Will chunks overlap? If yes, by how much and why? If no, explain why overlap isn't necessary for this document type.*
-
 ```
-[your answer here]
+50 characters of overlap between adjacent chunks. If a rule falls exactly
+on a chunk boundary, neither chunk alone contains the full rule. Overlap
+duplicates the tail of each chunk at the start of the next, so boundary-
+spanning content can still be retrieved intact. 50 characters is roughly
+one short sentence — enough to preserve context without significantly
+bloating the database.
 ```
 
 ---
 
 ### Minimum chunk length
 
-*What is the minimum length a chunk must be to be included? What do you do with segments that are shorter than this?*
-
 ```
-[your answer here]
+50 characters. Chunks shorter than this are discarded. Very short segments
+typically contain only whitespace, section headers, or punctuation — content
+that has no semantic signal and would just add noise to the vector database.
 ```
 
 ---
 
 ### Rationale
 
-*In 2–3 sentences: why does this strategy fit rule book text specifically? What would break if you used a different approach?*
-
 ```
-[your answer here]
+Rule books pack a lot of meaning into short passages, so smaller chunks
+tend to outperform paragraph-level splitting for targeted Q&A. A 300-
+character window is typically one complete rule — the right unit of
+retrieval for questions like "What happens when you roll a 7?" Paragraph
+splitting would work but produces uneven chunk sizes, since rule book
+paragraphs vary from one sentence to ten.
 ```
 
 ---
 
 ### Known limitations
 
-*What does this strategy get wrong or handle poorly? What kinds of rules or passages will be chunked badly by your approach?*
-
 ```
-[your answer here]
+Character-based splitting is indifferent to sentence and paragraph
+boundaries. A chunk can begin mid-sentence or split a rule across two
+chunks even with overlap, if the rule is longer than `chunk_size`.
+Numbered lists (e.g., "1. ... 2. ... 3. ...") may get split in the
+middle of an item. A paragraph-aware or sentence-aware splitter would
+handle these cases better, at the cost of more implementation complexity.
 ```
 
 ---
 
 ## Implementation Notes
 
-*Fill this in after implementing, before moving to Milestone 2.*
+*Fill this in after running the app and confirming ingestion worked.*
 
 **Actual chunk count produced across all 8 rule books:**
 
@@ -110,7 +119,7 @@ Returns an empty list `[]` if the input text is empty or produces no valid chunk
 [your answer here]
 ```
 
-**One thing that surprised you or didn't match your spec:**
+**One thing that surprised you or didn't match your expectations:**
 
 ```
 [your answer here]

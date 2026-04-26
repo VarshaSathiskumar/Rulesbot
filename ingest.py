@@ -24,24 +24,47 @@ def chunk_document(text, game_name):
     """
     Split a rule document into chunks ready for embedding.
 
-    TODO — Milestone 1:
+    This function is already implemented — read through it and the inline
+    comments before moving on. The decisions made here directly shape what
+    retrieval returns in Milestones 2 and 3, so it's worth understanding
+    before you build on top of it.
 
-    Right now this returns an empty list, so nothing gets stored and RulesBot
-    can't answer anything. Your job is to implement a chunking strategy.
+    Strategy: character-based sliding window with overlap.
+      - chunk_size = 300 characters: long enough to carry the semantic
+        meaning of a single rule, short enough to return targeted results
+      - overlap = 50 characters: duplicates a small window of text at each
+        boundary so a rule that spans two chunks can still be retrieved intact
+      - min_length = 50 characters: filters out whitespace artifacts and
+        very short fragments that add noise without useful semantic content
 
-    Before writing code, talk through these questions with your group:
-      - What's a reasonable chunk size for rule book text? Too small and you
-        lose context. Too large and retrieval becomes imprecise.
-      - Should chunks overlap? What would overlap help preserve?
-      - How will you attach the game name to each chunk so retrieval knows
-        which game an answer came from?
-
-    Your function should return a list of dicts. Each dict must have:
+    Returns a list of dicts, each with:
       - "text"     : the chunk text (str)
       - "game"     : the game name, e.g. "Catan" (str)
       - "chunk_id" : a unique identifier, e.g. "catan_0", "catan_1" (str)
-
-    A simple starting point: split on double newlines (paragraphs), then
-    filter out any chunks that are too short to be useful.
     """
-    return []
+    chunk_size = 300
+    overlap = 50
+    min_length = 50
+
+    chunks = []
+    prefix = game_name.lower().replace(" ", "_")
+    counter = 0
+
+    start = 0
+    while start < len(text):
+        end = start + chunk_size
+        chunk_text = text[start:end].strip()
+
+        if len(chunk_text) >= min_length:
+            chunks.append({
+                "text": chunk_text,
+                "game": game_name,
+                "chunk_id": f"{prefix}_{counter}",
+            })
+            counter += 1
+
+        # Advance by (chunk_size - overlap) so the next chunk shares
+        # `overlap` characters with the tail of this one.
+        start += chunk_size - overlap
+
+    return chunks
