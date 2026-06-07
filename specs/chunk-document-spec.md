@@ -116,11 +116,14 @@ handle these cases better, at the cost of more implementation complexity.
 **Actual chunk count produced across all 8 rule books:**
 
 ```
-[your answer here]
+149 chunks
 ```
 
 **One thing that surprised you or didn't match your expectations:**
 
 ```
-[your answer here]
+I was surprised that only 149 chunks were produced across all 8 rule
+books. I expected a higher number, but the 300-character chunk size
+allowed a large amount of text to fit into each chunk, reducing the total
+number of chunks generated.
 ```

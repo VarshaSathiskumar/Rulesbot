@@ -36,4 +36,52 @@ def generate_response(query, retrieved_chunks):
         )
 
     # Your implementation here.
-    return "⚙️ Response generation not yet implemented. Complete Milestone 3 to activate answers."
+    
+    context_parts = []
+    for i, chunk in enumerate(retrieved_chunks, start=1):
+        game = chunk.get("game", "Unknown Game")
+        text = chunk.get("text", "")
+        distance = chunk.get("distance", None)
+        context_parts.append(
+            f"[Chunk {i}]\n"
+            f"Game: {game}\n"
+            f"Distance: {distance}\n"
+            f"Rules Text:\n{text}"
+        )
+    context = "\n\n".join(context_parts)
+    prompt = f"""
+
+    You are RulesBot, a board game rules assistant.
+
+    Answer the user's question using ONLY the rule chunks provided below.
+
+    Do not use outside knowledge.
+
+    If the answer is not clearly found in the provided rules, say:
+
+    "I couldn't find that in the loaded rule books."
+
+    Always mention which game the answer comes from.
+
+    Rule chunks:
+
+    {context}
+
+    User question:
+
+    {query}
+
+    Answer:
+
+    """
+
+    response = _client.chat.completions.create(
+    model=LLM_MODEL,
+    messages=[
+
+        {"role": "user", "content": prompt}
+    ],
+    temperature=0
+)
+
+    return response.choices[0].message.content.strip()
